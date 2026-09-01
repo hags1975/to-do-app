@@ -52,14 +52,14 @@ h1 {
   padding: 10px 16px;
   border: none;
   border-radius: 8px;
-  background: #4a7dff;
-  color: #fff;
+  background: #f4c430;
+  color: #1f2430;
   font-size: 1rem;
   cursor: pointer;
 }
 
 .task-form button:hover {
-  background: #3a6ae0;
+  background: #e0b021;
 }
 
 .task-list {
