@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Weather</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="page">
+    <h1>Weather</h1>
+    <p class="subtitle">Check the current weather for any city.</p>
+
+    <div class="weather-card">
+      <label class="visually-hidden" for="city-input">City name</label>
+      <div class="search-row">
+        <input type="text" id="city-input" placeholder="Enter a city, e.g. Stockholm">
+        <button class="btn" id="get-weather-btn" type="button">Get Weather</button>
+      </div>
+      <p class="status" id="status" aria-live="polite"></p>
+      <div class="result" id="result" hidden>
+        <h2 id="result-city"></h2>
+        <p class="temp" id="result-temp"></p>
+        <p class="detail" id="result-description"></p>
+        <p class="detail" id="result-wind"></p>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>

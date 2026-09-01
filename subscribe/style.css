@@ -1,0 +1,104 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  padding: 48px 16px;
+  background: #f2f4f7;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  color: #1f2430;
+}
+
+.page {
+  max-width: 900px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+h1 {
+  margin: 0 0 8px;
+  font-size: 2rem;
+}
+
+.subtitle {
+  margin: 0 0 32px;
+  color: #5b6472;
+}
+
+.plans {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  justify-content: center;
+}
+
+.plan {
+  flex: 1 1 240px;
+  max-width: 280px;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  padding: 28px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.plan h2 {
+  margin: 0 0 8px;
+  font-size: 1.25rem;
+}
+
+.price {
+  margin: 0 0 20px;
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+.price span {
+  font-size: 1rem;
+  font-weight: 400;
+  color: #5b6472;
+}
+
+.features {
+  list-style: none;
+  margin: 0 0 24px;
+  padding: 0;
+  color: #5b6472;
+  font-size: 0.9rem;
+}
+
+.features li {
+  margin-bottom: 8px;
+}
+
+.select-btn {
+  width: 100%;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 8px;
+  background: #f4c430;
+  color: #1f2430;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.select-btn:hover:not(:disabled) {
+  background: #e0b021;
+}
+
+.select-btn:disabled {
+  opacity: 0.7;
+  cursor: default;
+}
+
+.plan-status {
+  margin: 12px 0 0;
+  min-height: 1.2em;
+  font-size: 0.85rem;
+  color: #2f9e44;
+}

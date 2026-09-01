@@ -1,3 +1,5 @@
+// To do app
+
 const STORAGE_KEY = "todo-app-tasks";
 
 const form = document.getElementById("task-form");
