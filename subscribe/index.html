@@ -8,43 +8,55 @@
 </head>
 <body>
   <div class="page">
-    <h1>Choose a plan</h1>
-    <p class="subtitle">Pick a monthly plan to get started.</p>
+    <div id="plan-picker">
+      <h1>Choose a plan</h1>
+      <p class="subtitle">Pick a monthly plan to get started.</p>
 
-    <div class="plans">
-      <div class="plan" data-plan="Basic" data-price="2">
-        <h2>Basic</h2>
-        <p class="price">$2<span>/mo</span></p>
-        <ul class="features">
-          <li>Core features</li>
-          <li>Email support</li>
-        </ul>
-        <button class="select-btn" type="button">Select</button>
-        <p class="plan-status" aria-live="polite"></p>
+      <div class="plans">
+        <div class="plan" data-plan="Basic" data-price="2">
+          <h2>Basic</h2>
+          <p class="price">$2<span>/mo</span></p>
+          <ul class="features">
+            <li>Core features</li>
+            <li>Email support</li>
+          </ul>
+          <button class="select-btn" type="button">Select</button>
+        </div>
+
+        <div class="plan" data-plan="Standard" data-price="5">
+          <h2>Standard</h2>
+          <p class="price">$5<span>/mo</span></p>
+          <ul class="features">
+            <li>Everything in Basic</li>
+            <li>Priority support</li>
+            <li>Advanced features</li>
+          </ul>
+          <button class="select-btn" type="button">Select</button>
+        </div>
+
+        <div class="plan" data-plan="Premium" data-price="10">
+          <h2>Premium</h2>
+          <p class="price">$10<span>/mo</span></p>
+          <ul class="features">
+            <li>Everything in Standard</li>
+            <li>24/7 support</li>
+            <li>All premium features</li>
+          </ul>
+          <button class="select-btn" type="button">Select</button>
+        </div>
       </div>
+    </div>
 
-      <div class="plan" data-plan="Standard" data-price="5">
-        <h2>Standard</h2>
-        <p class="price">$5<span>/mo</span></p>
-        <ul class="features">
-          <li>Everything in Basic</li>
-          <li>Priority support</li>
-          <li>Advanced features</li>
-        </ul>
-        <button class="select-btn" type="button">Select</button>
-        <p class="plan-status" aria-live="polite"></p>
-      </div>
+    <div class="confirmation" id="confirmation" hidden>
+      <h1>Your plan</h1>
+      <p class="subtitle">Review your selection and continue to payment.</p>
 
-      <div class="plan" data-plan="Premium" data-price="10">
-        <h2>Premium</h2>
-        <p class="price">$10<span>/mo</span></p>
-        <ul class="features">
-          <li>Everything in Standard</li>
-          <li>24/7 support</li>
-          <li>All premium features</li>
-        </ul>
-        <button class="select-btn" type="button">Select</button>
-        <p class="plan-status" aria-live="polite"></p>
+      <div class="confirmation-card">
+        <h2 id="confirmation-plan-name"></h2>
+        <p class="price" id="confirmation-price"></p>
+        <button class="select-btn" type="button" id="continue-btn">Continue to payment</button>
+        <p class="plan-status" id="confirmation-status" aria-live="polite"></p>
+        <button class="change-plan-btn" type="button" id="change-plan-btn">Change plan</button>
       </div>
     </div>
   </div>

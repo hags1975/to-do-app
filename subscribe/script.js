@@ -16,28 +16,53 @@ function loadStripeJs() {
     script.onload = resolve;
     script.onerror = reject;
     document.head.appendChild(script);
-    //Testing comment editor
   });
   return stripePromise;
 }
 
+const planPicker = document.getElementById("plan-picker");
+const confirmation = document.getElementById("confirmation");
+const confirmationPlanName = document.getElementById("confirmation-plan-name");
+const confirmationPrice = document.getElementById("confirmation-price");
+const confirmationStatus = document.getElementById("confirmation-status");
+const continueBtn = document.getElementById("continue-btn");
+const changePlanBtn = document.getElementById("change-plan-btn");
+
 document.querySelectorAll(".plan").forEach((planEl) => {
   const button = planEl.querySelector(".select-btn");
-  const status = planEl.querySelector(".plan-status");
   const planName = planEl.dataset.plan;
+  const price = planEl.dataset.price;
 
-  button.addEventListener("click", async () => {
-    button.disabled = true;
-    status.textContent = "Loading Stripe...";
+  button.addEventListener("click", () => {
+    confirmationPlanName.textContent = planName;
+    confirmationPrice.innerHTML = `$${price}<span>/mo</span>`;
+    confirmationStatus.textContent = "";
+    continueBtn.disabled = false;
 
-    try {
-      await loadStripeJs();
-      const stripe = Stripe(STRIPE_PUBLISHABLE_KEY);
-      status.textContent = `Stripe loaded — ready to check out with the ${planName} plan.`;
-    } catch (err) {
-      status.textContent = "Failed to load Stripe.";
-    } finally {
-      button.disabled = false;
-    }
+    planPicker.hidden = true;
+    confirmation.hidden = false;
+    window.scrollTo(0, 0);
   });
+});
+
+continueBtn.addEventListener("click", async () => {
+  continueBtn.disabled = true;
+  confirmationStatus.textContent = "Loading Stripe...";
+
+  try {
+    await loadStripeJs();
+    const stripe = Stripe(STRIPE_PUBLISHABLE_KEY);
+    confirmationStatus.textContent = `Stripe loaded — ready to check out with the ${confirmationPlanName.textContent} plan.`;
+  } catch (err) {
+    confirmationStatus.textContent = "Failed to load Stripe.";
+  } finally {
+    continueBtn.disabled = false;
+  }
+});
+
+changePlanBtn.addEventListener("click", () => {
+  confirmation.hidden = true;
+  planPicker.hidden = false;
+  confirmationStatus.textContent = "";
+  window.scrollTo(0, 0);
 });
