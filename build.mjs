@@ -1,5 +1,15 @@
-// build.mjs — minify + content-hash CSS/JS, mirror src/ structure into dist/
-// Run: node build.mjs
+// build.mjs
+//
+// Conventions:
+// - script.js      = main page JavaScript
+// - _lazy-*.js     = lazy-loaded JavaScript
+// - _*.css         = CSS partial, bundled via @import
+// - other .css     = page stylesheet
+// - all asset URLs must be root-relative: /weather/script.js
+// - everything else is copied unchanged
+//
+// Run:
+//   node build.mjs
 
 import {
   readdir,
@@ -20,24 +30,29 @@ import {
 } from 'node:path';
 
 import { createHash } from 'node:crypto';
-import { bundle as lightning, browserslistToTargets } from 'lightningcss';
+import {
+  bundle as lightning,
+  browserslistToTargets,
+} from 'lightningcss';
+
 import browserslist from 'browserslist';
 import { minify as terser } from 'terser';
+
 
 const SRC = resolve('src');
 const OUT = resolve('dist');
 
-// Public path the site is served from.
-//
-// '/'         → domain root
-// '/my-repo/' → GitHub Pages project site
-//
-// Must end with '/'.
-const BASE = (process.env.BASE ?? '/').replace(/\/*$/, '/');
+const targets = browserslistToTargets(
+  browserslist(),
+);
 
-const targets = browserslistToTargets(browserslist());
 
-const posix = path => path.split('\\').join('/');
+// -----------------------------------------------------------------------------
+// Helpers
+// -----------------------------------------------------------------------------
+
+const posix = path =>
+  path.split('\\').join('/');
 
 const hash = buffer =>
   createHash('sha256')
@@ -45,107 +60,90 @@ const hash = buffer =>
     .digest('hex')
     .slice(0, 8);
 
+const isMainJs = file =>
+  extname(file) === '.js' &&
+  basename(file) === 'script.js';
 
-// -----------------------------------------------------------------------------
-// Walk source tree
-// -----------------------------------------------------------------------------
+const isLazyJs = file =>
+  extname(file) === '.js' &&
+  basename(file).startsWith('_lazy-');
+
+const isCssPartial = file =>
+  extname(file) === '.css' &&
+  basename(file).startsWith('_');
+
+
+// Convert:
+//
+// /weather/script.js
+//
+// to:
+//
+// weather/script.js
+//
+// which matches the keys stored in `renamed`.
+function assetKey(url) {
+  if (!url.startsWith('/')) {
+    throw new Error(
+      `Asset path must start with "/": ${url}`,
+    );
+  }
+
+  return posix(
+    url.slice(1),
+  );
+}
+
 
 async function walk(dir) {
-  const output = [];
+  const files = [];
 
   const entries = await readdir(dir, {
     withFileTypes: true,
   });
 
-  // Deterministic builds across filesystems/platforms.
-  entries.sort((a, b) => a.name.localeCompare(b.name));
+  entries.sort(
+    (a, b) => a.name.localeCompare(b.name),
+  );
 
   for (const entry of entries) {
     const path = join(dir, entry.name);
 
     if (entry.isDirectory()) {
-      output.push(...await walk(path));
+      files.push(...await walk(path));
     } else {
-      output.push(path);
+      files.push(path);
     }
   }
 
-  return output;
+  return files;
+}
+
+
+async function minifyJs(source, rel) {
+  const result = await terser(source, {
+    module: true,
+    compress: true,
+    mangle: true,
+  });
+
+  if (result.code == null) {
+    throw new Error(
+      `Terser produced no output for ${rel}`,
+    );
+  }
+
+  return Buffer.from(result.code);
 }
 
 
 // -----------------------------------------------------------------------------
-// Clean output
+// Hashed output
 // -----------------------------------------------------------------------------
 
-await rm(OUT, {
-  recursive: true,
-  force: true,
-});
-
-const files = await walk(SRC);
-
-// src-relative path → hashed dist-relative path
-//
-// "todo/app.js"
-//   →
-// "todo/app.1a2b3c4d.js"
 const renamed = new Map();
 
-
-// -----------------------------------------------------------------------------
-// Pass 1
-//
-// Minify CSS and JS and emit content-hashed files.
-// -----------------------------------------------------------------------------
-
-for (const file of files) {
-  const ext = extname(file);
-
-  if (ext !== '.css' && ext !== '.js') {
-    continue;
-  }
-
-  const rel = relative(SRC, file);
-
-  // CSS files prefixed with "_" are partials.
-  // Lightning CSS pulls these into the page stylesheet via @import,
-  // so they should not be emitted independently.
-  if (
-    ext === '.css' &&
-    basename(file).startsWith('_')
-  ) {
-    continue;
-  }
-
-  let output;
-
-  if (ext === '.css') {
-    output = lightning({
-      filename: file,
-      minify: true,
-      targets,
-    }).code;
-  }
-
-  if (ext === '.js') {
-    const source = await readFile(file, 'utf8');
-
-    const result = await terser(source, {
-      module: true,
-      compress: true,
-      mangle: true,
-    });
-
-    if (result.code == null) {
-      throw new Error(
-        `Terser produced no output for ${rel}`,
-      );
-    }
-
-    output = Buffer.from(result.code);
-  }
-
+async function emitHashed(rel, output) {
   const outRel = rel.replace(
     /\.(css|js)$/,
     `.${hash(output)}.$1`,
@@ -156,66 +154,106 @@ for (const file of files) {
     posix(outRel),
   );
 
-  const dest = join(OUT, outRel);
+  const dest = join(
+    OUT,
+    outRel,
+  );
 
   await mkdir(dirname(dest), {
     recursive: true,
   });
 
-  await writeFile(dest, output);
+  await writeFile(
+    dest,
+    output,
+  );
 }
 
 
 // -----------------------------------------------------------------------------
-// Pass 2
-//
-// Copy everything else.
-// Rewrite local CSS/JS references in HTML to their hashed filenames.
+// Build
 // -----------------------------------------------------------------------------
 
+await rm(OUT, {
+  recursive: true,
+  force: true,
+});
+
+const files = await walk(SRC);
 const unresolved = [];
 
+
+// -----------------------------------------------------------------------------
+// Pass 1 — lazy JavaScript
+//
+// Build these first because script.js may reference them.
+// -----------------------------------------------------------------------------
+
 for (const file of files) {
+  if (!isLazyJs(file)) {
+    continue;
+  }
+
   const rel = relative(SRC, file);
-
-  // Already emitted during Pass 1.
-  if (/\.(css|js)$/.test(rel)) {
-    continue;
-  }
-
-  const dest = join(OUT, rel);
-
-  await mkdir(dirname(dest), {
-    recursive: true,
-  });
-
-  // Non-HTML assets are copied unchanged.
-  if (extname(file) !== '.html') {
-    await cp(file, dest);
-    continue;
-  }
-
   const source = await readFile(file, 'utf8');
 
-  const html = source.replace(
-    /(href|src)=("|')([^"']+\.(?:css|js))(?:[?#][^"']*)?\2/g,
-    (match, attr, quote, url) => {
+  await emitHashed(
+    rel,
+    await minifyJs(source, rel),
+  );
+}
 
-      // Leave absolute/CDN URLs untouched.
-      if (/^(?:https?:)?\/\//.test(url)) {
-        return match;
-      }
 
-      // Resolve the URL relative to the HTML file,
-      // then convert it to a src-relative lookup key.
-      const key = posix(
-        relative(
-          SRC,
-          resolve(dirname(file), url),
-        ),
+// -----------------------------------------------------------------------------
+// Pass 2 — CSS + script.js
+// -----------------------------------------------------------------------------
+
+const LAZY_JS_REF =
+  /(\.src\s*=\s*)(["'])(\/[^"'\r\n]*_lazy-[^"'\r\n]*\.js)\2/g;
+
+
+for (const file of files) {
+  const ext = extname(file);
+
+
+  // CSS
+  if (ext === '.css') {
+    if (isCssPartial(file)) {
+      continue;
+    }
+
+    const rel = relative(SRC, file);
+
+    const output = lightning({
+      filename: file,
+      minify: true,
+      targets,
+    }).code;
+
+    await emitHashed(
+      rel,
+      output,
+    );
+
+    continue;
+  }
+
+
+  // Main JS
+  if (!isMainJs(file)) {
+    continue;
+  }
+
+  const rel = relative(SRC, file);
+  let source = await readFile(file, 'utf8');
+
+  source = source.replace(
+    LAZY_JS_REF,
+
+    (match, prefix, quote, url) => {
+      const hit = renamed.get(
+        assetKey(url),
       );
-
-      const hit = renamed.get(key);
 
       if (!hit) {
         unresolved.push(
@@ -225,16 +263,98 @@ for (const file of files) {
         return match;
       }
 
-      return `${attr}=${quote}${BASE}${hit}${quote}`;
+      return (
+        `${prefix}${quote}/${hit}${quote}`
+      );
     },
   );
 
-  await writeFile(dest, html);
+  await emitHashed(
+    rel,
+    await minifyJs(source, rel),
+  );
 }
 
 
 // -----------------------------------------------------------------------------
-// Validate references
+// Pass 3 — HTML + static files
+// -----------------------------------------------------------------------------
+
+const HTML_ASSET_REF =
+  /(href|src)=("|')(\/[^"']+\.(?:css|js))(?:[?#][^"']*)?\2/g;
+
+
+for (const file of files) {
+  const rel = relative(SRC, file);
+
+
+  // Already handled.
+  if (
+    extname(file) === '.css' ||
+    isMainJs(file) ||
+    isLazyJs(file)
+  ) {
+    continue;
+  }
+
+  const dest = join(
+    OUT,
+    rel,
+  );
+
+  await mkdir(dirname(dest), {
+    recursive: true,
+  });
+
+
+  // Everything except HTML is copied unchanged.
+  if (extname(file) !== '.html') {
+    await cp(
+      file,
+      dest,
+    );
+
+    continue;
+  }
+
+
+  // Rewrite CSS/JS references in HTML.
+  const source = await readFile(
+    file,
+    'utf8',
+  );
+
+  const html = source.replace(
+    HTML_ASSET_REF,
+
+    (match, attr, quote, url) => {
+      const hit = renamed.get(
+        assetKey(url),
+      );
+
+      if (!hit) {
+        unresolved.push(
+          `${url} referenced by ${rel}`,
+        );
+
+        return match;
+      }
+
+      return (
+        `${attr}=${quote}/${hit}${quote}`
+      );
+    },
+  );
+
+  await writeFile(
+    dest,
+    html,
+  );
+}
+
+
+// -----------------------------------------------------------------------------
+// Validate
 // -----------------------------------------------------------------------------
 
 if (unresolved.length > 0) {
@@ -242,31 +362,13 @@ if (unresolved.length > 0) {
     [
       'Build failed: unresolved CSS/JS references:',
       '',
-      ...unresolved.map(item => `  - ${item}`),
+      ...unresolved.map(
+        item => `  - ${item}`,
+      ),
     ].join('\n'),
   );
 }
 
-
-// -----------------------------------------------------------------------------
-// Optional build manifest
-// -----------------------------------------------------------------------------
-
-const manifest = Object.fromEntries(
-  [...renamed.entries()].sort(
-    ([a], [b]) => a.localeCompare(b),
-  ),
-);
-
-await writeFile(
-  join(OUT, 'manifest.json'),
-  JSON.stringify(manifest, null, 2) + '\n',
-);
-
-
-// -----------------------------------------------------------------------------
-// Done
-// -----------------------------------------------------------------------------
 
 console.log(
   `Built ${files.length} source files → dist/`,

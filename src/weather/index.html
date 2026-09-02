@@ -4,7 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Weather</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="/weather/style.css">
+  <script src="/weather/script.js" defer></script>
 </head>
 <body>
   <div class="page">
@@ -36,36 +37,5 @@
       </div>
     </div>
   </div>
-
-  <script>
-    (() => {
-      const button = document.getElementById("get-weather-btn");
-      const status = document.getElementById("status");
-      let scriptRequested = false;
-
-      button.addEventListener("click", () => {
-        if (scriptRequested) {
-          return;
-        }
-        scriptRequested = true;
-
-        button.disabled = true;
-        status.textContent = "Loading weather app...";
-
-        const script = document.createElement("script");
-        script.src = "script.js";
-        script.onload = () => {
-          button.disabled = false;
-          button.click();
-        };
-        script.onerror = () => {
-          scriptRequested = false;
-          status.textContent = "Failed to load weather. Please try again.";
-          button.disabled = false;
-        };
-        document.head.appendChild(script);
-      });
-    })();
-  </script>
 </body>
 </html>

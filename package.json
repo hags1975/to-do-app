@@ -5,9 +5,9 @@
   "type": "module",
   "description": "A small multi-page to-do app.",
   "scripts": {
-    "dev": "serve src",
+    "dev": "serve src -l 3000",
     "build": "node build.mjs",
-    "preview": "serve dist"
+    "preview": "serve dist -l 3001"
   },
   "browserslist": [
     "> 0.25%",
