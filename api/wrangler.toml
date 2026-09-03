@@ -1,0 +1,23 @@
+name = "todo-app-api"
+main = "src/index.js"
+compatibility_date = "2025-01-01"
+
+# Local dev server settings (wrangler dev)
+[dev]
+port = 8787
+
+# Add bindings as the API grows, e.g.:
+# [[kv_namespaces]]
+# binding = "TODOS"
+# id = "<kv-namespace-id>"
+#
+# [[d1_databases]]
+# binding = "DB"
+# database_name = "todo-app"
+# database_id = "<d1-database-id>"
+#
+# [vars]
+# ALLOWED_ORIGIN = "https://your-frontend-domain.com"
+#
+# Secrets (Stripe keys, etc.) should be set with `wrangler secret put <NAME>`,
+# never committed here.
