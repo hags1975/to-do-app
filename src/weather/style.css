@@ -80,6 +80,39 @@ h1 {
   cursor: default;
 }
 
+.clothing-label {
+  margin: 16px 0 8px;
+  font-size: 0.85rem;
+  color: #5b6472;
+  text-align: left;
+}
+
+.clothing-row {
+  display: flex;
+  gap: 8px;
+}
+
+.clothing-btn {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid #d6d9e0;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #1f2430;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.clothing-btn:hover {
+  border-color: #b9bec9;
+}
+
+.clothing-btn.active {
+  background: #f4c430;
+  border-color: #f4c430;
+}
+
 .status {
   margin: 12px 0 0;
   min-height: 1.2em;
@@ -108,4 +141,12 @@ h1 {
   margin: 0;
   color: #5b6472;
   font-size: 0.9rem;
+}
+
+.comfort {
+  margin: 12px 0 0;
+  padding-top: 12px;
+  border-top: 1px solid #eceef2;
+  font-size: 0.95rem;
+  font-weight: 600;
 }

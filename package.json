@@ -1,0 +1,26 @@
+{
+  "name": "todo-app",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "A small multi-page to-do app.",
+  "scripts": {
+    "dev": "serve src -l 3000",
+    "build": "node build.mjs",
+    "preview": "serve dist -l 3001"
+  },
+  "browserslist": [
+    "> 0.25%",
+    "last 2 versions",
+    "not dead"
+  ],
+  "devDependencies": {
+    "browserslist": "^4.28.8",
+    "lightningcss": "^1.33.0",
+    "serve": "^14.2.0",
+    "terser": "^5.51.2"
+  },
+  "engines": {
+    "node": ">=20.11"
+  }
+}

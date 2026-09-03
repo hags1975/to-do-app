@@ -4,7 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Weather</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="/weather/style.css">
+  <script src="/weather/script.js" defer></script>
 </head>
 <body>
   <div class="page">
@@ -17,16 +18,24 @@
         <input type="text" id="city-input" placeholder="Enter a city, e.g. Stockholm">
         <button class="btn" id="get-weather-btn" type="button">Get Weather</button>
       </div>
+
+      <p class="clothing-label">What are you wearing?</p>
+      <div class="clothing-row" role="group" aria-label="Clothing level">
+        <button class="clothing-btn" data-level="light" type="button">Light</button>
+        <button class="clothing-btn active" data-level="medium" type="button">Medium</button>
+        <button class="clothing-btn" data-level="heavy" type="button">Heavy</button>
+      </div>
+
       <p class="status" id="status" aria-live="polite"></p>
       <div class="result" id="result" hidden>
         <h2 id="result-city"></h2>
         <p class="temp" id="result-temp"></p>
         <p class="detail" id="result-description"></p>
         <p class="detail" id="result-wind"></p>
+        <p class="detail" id="result-humidity"></p>
+        <p class="comfort" id="result-comfort" aria-live="polite"></p>
       </div>
     </div>
   </div>
-
-  <script src="script.js"></script>
 </body>
 </html>
