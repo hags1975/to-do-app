@@ -5,6 +5,8 @@
 // - _lazy-*.js     = lazy-loaded JavaScript
 // - _*.css         = CSS partial, bundled via @import
 // - other .css     = page stylesheet
+// - csp.txt        = per-page CSP directives (one per line); merged into
+//                    a single dist/_headers, not copied to the page itself
 // - all asset URLs must be root-relative: /weather/script.js
 // - everything else is copied unchanged
 //
@@ -72,6 +74,9 @@ const isCssPartial = file =>
   extname(file) === '.css' &&
   basename(file).startsWith('_');
 
+const isCsp = file =>
+  basename(file) === 'csp.txt';
+
 
 // Convert:
 //
@@ -92,6 +97,19 @@ function assetKey(url) {
   return posix(
     url.slice(1),
   );
+}
+
+
+// Convert a page directory (e.g. `<SRC>/weather`) into its Cloudflare
+// Pages route, e.g. `/weather`. The site root becomes `/`.
+function cspRoute(dir) {
+  const rel = posix(
+    relative(SRC, dir),
+  );
+
+  return rel === ''
+    ? '/'
+    : `/${rel}`;
 }
 
 
@@ -288,11 +306,12 @@ for (const file of files) {
   const rel = relative(SRC, file);
 
 
-  // Already handled.
+  // Already handled, or handled separately below.
   if (
     extname(file) === '.css' ||
     isMainJs(file) ||
-    isLazyJs(file)
+    isLazyJs(file) ||
+    isCsp(file)
   ) {
     continue;
   }
@@ -349,6 +368,60 @@ for (const file of files) {
   await writeFile(
     dest,
     html,
+  );
+}
+
+
+// -----------------------------------------------------------------------------
+// Pass 4 — CSP headers
+//
+// Merge every page's csp.txt into a single Cloudflare Pages `_headers`
+// file, one route block per page.
+// -----------------------------------------------------------------------------
+
+const cspEntries = [];
+
+for (const file of files) {
+  if (!isCsp(file)) {
+    continue;
+  }
+
+  const source = await readFile(file, 'utf8');
+
+  const policy = source
+    .split(/\r?\n/)
+    .map(line => line.trim())
+    .filter(Boolean)
+    .join(' ');
+
+  cspEntries.push({
+    route: cspRoute(dirname(file)),
+    policy,
+  });
+}
+
+cspEntries.sort(
+  (a, b) => a.route.localeCompare(b.route),
+);
+
+if (cspEntries.length > 0) {
+  const headers = cspEntries
+    .map(({ route, policy }) => {
+      const paths = route === '/'
+        ? [route]
+        : [route, `${route}/*`];
+
+      return paths
+        .map(path => (
+          `${path}\n  Content-Security-Policy: ${policy}`
+        ))
+        .join('\n');
+    })
+    .join('\n\n');
+
+  await writeFile(
+    join(OUT, '_headers'),
+    `${headers}\n`,
   );
 }
 
