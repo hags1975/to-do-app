@@ -1,0 +1,10 @@
+default-src 'self';
+script-src 'self';
+style-src 'self';
+img-src 'self' data:;
+font-src 'self';
+connect-src 'self' http://localhost:8787;
+object-src 'none';
+base-uri 'self';
+frame-ancestors 'none';
+form-action 'self';

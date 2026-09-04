@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>API Health</title>
+  <link rel="stylesheet" href="/health/style.css">
+  <script src="/health/script.js" defer></script>
+</head>
+<body>
+  <div class="page">
+    <h1>API Health</h1>
+    <p class="subtitle">Check whether the API is up and responding.</p>
+
+    <div class="health-card">
+      <button class="btn" id="check-health-btn" type="button">Check Health</button>
+
+      <p class="status" id="status" aria-live="polite"></p>
+      <div class="result" id="result" hidden>
+        <p class="result-label" id="result-label"></p>
+        <pre class="result-body" id="result-body"></pre>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
